@@ -61,6 +61,8 @@ D2D1_RECT_F b1Rect{ 10.0f, 5.0f, scr_width / 3 - 50.0f, 50.0f };
 D2D1_RECT_F b2Rect{ scr_width / 3 + 10.0f, 5.0f, scr_width * 2 / 3 - 50.0f, 50.0f };
 D2D1_RECT_F b3Rect{ scr_width * 2 / 3 + 10.0f, 5.0f, scr_width, 50.0f };
 
+D2D1_RECT_F ViewMapRect{ -200.0f, -100.0f, map_width, map_height };
+
 bool pause = false;
 bool sound = true;
 bool show_help = false;
@@ -76,6 +78,13 @@ int level = 1;
 int score = 0;
 int mins = 0;
 int secs = 0;
+
+int club_lifes = 100;
+int axe_lifes = 100;
+int sword_lifes = 100;
+
+int cloak_lifes = 100;
+int mail_lifes = 100;
 
 int field_frame = 0;
 int field_delay = 3;
@@ -138,7 +147,7 @@ ID2D1Bitmap* bmpIntro[56]{ nullptr };
 
 ////////////////////////////////////////////
 
-
+dll::creature_ptr Hero = nullptr;
 
 
 
@@ -243,7 +252,15 @@ void InitGame()
     secs = 0;
     wcscpy_s(current_player, L"ONE_CAVEMAN");
     name_set = false;
+    club_lifes = 100;
+    axe_lifes = 100;
+    sword_lifes = 100;
+    cloak_lifes = 100;
+    mail_lifes = 100;
 
+    ClearHeap(&Hero);
+    Hero = dll::CreatureFactory(hero_flag, 80.0f, ground - 150.0f);
+    
 }
 
 INT_PTR CALLBACK bDlgProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lParam)
@@ -429,6 +446,58 @@ LRESULT CALLBACK bWinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPa
             break;
 
         }
+        break;
+
+
+    case WM_LBUTTONDOWN:
+        if (HIWORD(lParam) > 50)
+        {
+            if (Hero)
+            {
+                
+            }
+
+        }
+
+        break;
+
+    case WM_KEYDOWN:
+
+        switch (LOWORD(wParam))
+        {
+        case VK_LEFT:
+            if (ViewMapRect.right > scr_width)
+            {
+                --ViewMapRect.left;
+                --ViewMapRect.right;
+            }
+            break;
+
+        case VK_RIGHT:
+            if (ViewMapRect.left < 0)
+            {
+                ++ViewMapRect.left;
+                ++ViewMapRect.right;
+            }
+            break;
+
+        case VK_UP:
+            if (ViewMapRect.bottom > scr_height)
+            {
+                --ViewMapRect.bottom;
+                --ViewMapRect.top;
+            }
+            break;
+
+        case VK_DOWN:
+            if (ViewMapRect.top < 0)
+            {
+                ++ViewMapRect.top;
+                ++ViewMapRect.bottom;
+            }
+            break;
+        }
+
         break;
 
     default: return DefWindowProc(hwnd, ReceivedMsg, wParam, lParam);
@@ -1018,7 +1087,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             else Draw->DrawTextW(L"ПОМОЩ ЗА ИГРАТА", 16, nrmTextFormat, b3Rect, txtBrush);
         }
 
-        Draw->DrawBitmap(bmpField[field_frame], D2D1::RectF(0, 50, scr_width, scr_height));
+        Draw->DrawBitmap(bmpField[field_frame], ViewMapRect);
         field_delay--;
         if (field_delay <= 0)
         {
@@ -1027,7 +1096,57 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             if (field_frame > 55)field_frame = 0;
         }
 
+        if (Hero)
+        {
+            switch (Hero->dir)
+            {
+            case dirs::left:
+                if (Hero->CheckType(hero_flag))
+                {
+                    int aframe = Hero->GetFrame();
+                    Draw->DrawBitmap(bmpHeroL[aframe], Resizer(bmpHeroL[aframe], Hero->x, Hero->y));
+                }
+                else if (Hero->CheckType(hero_club_flag))
+                {
+                    int aframe = Hero->GetFrame();
+                    Draw->DrawBitmap(bmpClubHeroL[aframe], Resizer(bmpClubHeroL[aframe], Hero->x, Hero->y));
+                }
+                else if (Hero->CheckType(hero_axe_flag))
+                {
+                    int aframe = Hero->GetFrame();
+                    Draw->DrawBitmap(bmpAxeHeroL[aframe], Resizer(bmpAxeHeroL[aframe], Hero->x, Hero->y));
+                }
+                else if (Hero->CheckType(hero_sword_flag))
+                {
+                    int aframe = Hero->GetFrame();
+                    Draw->DrawBitmap(bmpSwordHeroL[aframe], Resizer(bmpSwordHeroL[aframe], Hero->x, Hero->y));
+                }
+                break;
 
+            case dirs::right:
+                if (Hero->CheckType(hero_flag))
+                {
+                    int aframe = Hero->GetFrame();
+                    Draw->DrawBitmap(bmpHeroR[aframe], Resizer(bmpHeroR[aframe], Hero->x, Hero->y));
+                }
+                else if (Hero->CheckType(hero_club_flag))
+                {
+                    int aframe = Hero->GetFrame();
+                    Draw->DrawBitmap(bmpClubHeroR[aframe], Resizer(bmpClubHeroR[aframe], Hero->x, Hero->y));
+                }
+                else if (Hero->CheckType(hero_axe_flag))
+                {
+                    int aframe = Hero->GetFrame();
+                    Draw->DrawBitmap(bmpAxeHeroR[aframe], Resizer(bmpAxeHeroR[aframe], Hero->x, Hero->y));
+                }
+                else if (Hero->CheckType(hero_sword_flag))
+                {
+                    int aframe = Hero->GetFrame();
+                    Draw->DrawBitmap(bmpSwordHeroR[aframe], Resizer(bmpSwordHeroR[aframe], Hero->x, Hero->y));
+                }
+                break;
+            }
+        }
 
         ////////////////////////////////////////////////
         Draw->EndDraw();

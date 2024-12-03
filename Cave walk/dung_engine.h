@@ -16,7 +16,7 @@ constexpr float scr_width{ 800.0f };
 constexpr float scr_height{ 600.0f };
 
 constexpr float sky{ 50.0f };
-constexpr float ground{ 650.0f };
+constexpr float ground{ 550.0f };
 
 enum class dirs { left = 0, down = 1, up = 2, right = 3, stop = 4 };
 
@@ -176,6 +176,7 @@ namespace dll
 			int Attack();
 			float Distance(POINT reference_point, POINT my_point);
 
+			bool CheckType(unsigned char which_type);
 			void SetObstacleFlag(unsigned char which_flag);
 			unsigned char GetObstacleFlag() const;
 			unsigned char Move(float gear, PROT_CONTAINER& Obstacles, bool need_new_path = false,
@@ -184,7 +185,7 @@ namespace dll
 			void Release();
 			void Transform(unsigned char to_what);
 
-			friend BASE_CREATURE_CLASS* CreatureFactory(unsigned char what, float _start_x, float _start_y);
+			friend DUNGENGINE_API BASE_CREATURE_CLASS* CreatureFactory(unsigned char what, float _start_x, float _start_y);
 	};
 
 	typedef PROT_CONTAINER* Container;
@@ -192,4 +193,5 @@ namespace dll
 	typedef BASE_CREATURE_CLASS* creature_ptr;
 
 	DUNGENGINE_API asset_ptr AssetFactory(int16_t what, float _start_x, float _start_y);
+	DUNGENGINE_API BASE_CREATURE_CLASS* CreatureFactory(unsigned char what, float _start_x, float _start_y);
 }
