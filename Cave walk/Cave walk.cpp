@@ -148,7 +148,9 @@ ID2D1Bitmap* bmpIntro[56]{ nullptr };
 ////////////////////////////////////////////
 
 dll::creature_ptr Hero = nullptr;
+bool move_hero = false;
 
+std::vector<dll::asset_ptr> vObstacles;
 
 
 
@@ -258,9 +260,21 @@ void InitGame()
     cloak_lifes = 100;
     mail_lifes = 100;
 
+    move_hero = false;
+
     ClearHeap(&Hero);
     Hero = dll::CreatureFactory(hero_flag, 80.0f, ground - 150.0f);
+ 
+    if (!vObstacles.empty())
+    for (int i = 0; i < vObstacles.size(); ++i)ClearHeap(&vObstacles[i]);
+    vObstacles.clear();
     
+    for (float i = -200.0f; i <= map_width - 50.0f; i += 50.0f)
+        vObstacles.push_back(dll::AssetFactory(stone_brick_flag, i, map_height - 50.0f));
+    for (float i = -50.0f; i < map_height - 50.0f; i += 50.0f)
+        vObstacles.push_back(dll::AssetFactory(stone_brick_flag, -200.0f, i));
+    for (float i = -50.0f; i < map_height - 50.0f; i += 50.0f)
+        vObstacles.push_back(dll::AssetFactory(stone_brick_flag, map_width - 50.0f, i));
 }
 
 INT_PTR CALLBACK bDlgProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lParam)
@@ -452,13 +466,21 @@ LRESULT CALLBACK bWinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPa
     case WM_LBUTTONDOWN:
         if (HIWORD(lParam) > 50)
         {
-            if (Hero)
+            if (Hero && !vObstacles.empty())
             {
-                
+                dll::PROT_CONTAINER ObstacleChecker(vObstacles.size());
+
+                for (int i = 0; i < ObstacleChecker.size(); i++)
+                {
+                    dll::PROTON anObstacle(vObstacles[i]->x, vObstacles[i]->y,
+                        vObstacles[i]->ex, vObstacles[i]->ey);
+                    ObstacleChecker.push_back(anObstacle);
+                }
+
+                Hero->Move((float)(level), ObstacleChecker, true, LOWORD(lParam), HIWORD(lParam));
+                move_hero = true;
             }
-
         }
-
         break;
 
     case WM_KEYDOWN:
@@ -466,35 +488,16 @@ LRESULT CALLBACK bWinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPa
         switch (LOWORD(wParam))
         {
         case VK_LEFT:
-            if (ViewMapRect.right > scr_width)
-            {
-                --ViewMapRect.left;
-                --ViewMapRect.right;
-            }
+        
             break;
 
         case VK_RIGHT:
-            if (ViewMapRect.left < 0)
-            {
-                ++ViewMapRect.left;
-                ++ViewMapRect.right;
-            }
             break;
 
         case VK_UP:
-            if (ViewMapRect.bottom > scr_height)
-            {
-                --ViewMapRect.bottom;
-                --ViewMapRect.top;
-            }
             break;
 
         case VK_DOWN:
-            if (ViewMapRect.top < 0)
-            {
-                ++ViewMapRect.top;
-                ++ViewMapRect.bottom;
-            }
             break;
         }
 
@@ -1055,7 +1058,81 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
         ////////////////////////////////////////////////////
 
+        if (Hero && !vObstacles.empty())
+        {
+            dll::PROT_CONTAINER ObstacleChecker(vObstacles.size());
 
+            for (int i = 0; i < ObstacleChecker.size(); i++)
+            {
+                dll::PROTON anObstacle(vObstacles[i]->x, vObstacles[i]->y,
+                    vObstacles[i]->ex, vObstacles[i]->ey);
+                ObstacleChecker.push_back(anObstacle);
+            }
+
+            if (move_hero)
+            {
+                Hero->Move((float)(level), ObstacleChecker);
+            
+                if (Hero->ex >= scr_width - 60.0f)
+                {
+                    if (ViewMapRect.right > scr_width)
+                    {
+                        ViewMapRect.left -= (float)(level);
+                        ViewMapRect.right -= (float)(level);
+                        if (!vObstacles.empty())
+                            for (int i = 0; i < vObstacles.size(); ++i)
+                            {
+                                vObstacles[i]->x -= (float)(level);
+                                vObstacles[i]->SetEdges();
+                            }
+                    }
+                }
+                if (Hero->x <= 60.0f)
+                {
+                    if (ViewMapRect.left < 0)
+                    {
+                        ViewMapRect.left += (float)(level);
+                        ViewMapRect.right += (float)(level);
+                        if (!vObstacles.empty())
+                            for (int i = 0; i < vObstacles.size(); ++i)
+                            {
+                                vObstacles[i]->x += (float)(level);
+                                vObstacles[i]->SetEdges();
+                            }
+                    }
+                }
+            
+                if (Hero->ey >= ground - 60.0f)
+                {
+                    if (ViewMapRect.bottom > scr_height)
+                    {
+                        ViewMapRect.bottom -= (float)(level);
+                        ViewMapRect.top -= (float)(level);
+                        if (!vObstacles.empty())
+                            for (int i = 0; i < vObstacles.size(); ++i)
+                            {
+                                vObstacles[i]->y -= (float)(level);
+                                vObstacles[i]->SetEdges();
+                            }
+                    }
+                }
+                if (Hero->y <= sky + 60.0f)
+                {
+                    if (ViewMapRect.top < 0)
+                    {
+                        ViewMapRect.top += (float)(level);
+                        ViewMapRect.bottom += (float)(level);
+                        if (!vObstacles.empty())
+                            for (int i = 0; i < vObstacles.size(); ++i)
+                            {
+                                vObstacles[i]->y += (float)(level);
+                                vObstacles[i]->SetEdges();
+                            }
+                    }
+
+                }
+            }
+        }
 
 
 
@@ -1072,9 +1149,30 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
         Draw->BeginDraw();
 
-        if (txtBrush && hgltBrush && bckgBrush && inactBrush && nrmTextFormat)
+        Draw->DrawBitmap(bmpField[field_frame], ViewMapRect);
+        field_delay--;
+        if (field_delay <= 0)
         {
-            Draw->FillRectangle(D2D1::RectF(0, 0, scr_width, 50.0f), bckgBrush);
+            field_delay = 3;
+            ++field_frame;
+            if (field_frame > 55)field_frame = 0;
+        }
+        if (!vObstacles.empty())
+        {
+            for (int i = 0; i < vObstacles.size(); ++i)
+            {
+                if (vObstacles[i]->CheckFlag(stone_brick_flag))
+                    Draw->DrawBitmap(bmpBrick2, D2D1::RectF(vObstacles[i]->x, vObstacles[i]->y,
+                        vObstacles[i]->ex, vObstacles[i]->ey));
+                if (vObstacles[i]->CheckFlag(red_brick_flag))
+                    Draw->DrawBitmap(bmpBrick1, D2D1::RectF(vObstacles[i]->x, vObstacles[i]->y,
+                        vObstacles[i]->ex, vObstacles[i]->ey));
+            }
+        }
+        
+        if (bckgBrush)Draw->FillRectangle(D2D1::RectF(0, 0, scr_width, 50.0f), bckgBrush);
+        if (txtBrush && hgltBrush && inactBrush && nrmTextFormat)
+        {
             if (name_set) Draw->DrawTextW(L"ИМЕ НА БОЕЦ", 12, nrmTextFormat, b1Rect, inactBrush);
             else
             {
@@ -1086,16 +1184,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             if (b3Hglt) Draw->DrawTextW(L"ПОМОЩ ЗА ИГРАТА", 16, nrmTextFormat, b3Rect, hgltBrush);
             else Draw->DrawTextW(L"ПОМОЩ ЗА ИГРАТА", 16, nrmTextFormat, b3Rect, txtBrush);
         }
-
-        Draw->DrawBitmap(bmpField[field_frame], ViewMapRect);
-        field_delay--;
-        if (field_delay <= 0)
-        {
-            field_delay = 3;
-            ++field_frame;
-            if (field_frame > 55)field_frame = 0;
-        }
-
+        
+        
+        
+        
+        
+        
         if (Hero)
         {
             switch (Hero->dir)

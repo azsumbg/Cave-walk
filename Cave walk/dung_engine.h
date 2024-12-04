@@ -131,6 +131,8 @@ namespace dll
 			BASE_ASSETS_CLASS(int16_t _type, float where_x, float _where_y);
 			virtual ~BASE_ASSETS_CLASS() {};
 
+			void Release();
+
 			bool CheckFlag(int16_t which_flag) const;
 			void SetFlag(int16_t which_flag);
 			void NullFlag(int16_t which_flag);
