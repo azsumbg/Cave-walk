@@ -83,8 +83,8 @@ int club_lifes = 100;
 int axe_lifes = 100;
 int sword_lifes = 100;
 
-int cloak_lifes = 100;
-int mail_lifes = 100;
+int cloak_lifes = 0;
+int mail_lifes = 0;
 
 int field_frame = 0;
 int field_delay = 3;
@@ -149,6 +149,9 @@ ID2D1Bitmap* bmpIntro[56]{ nullptr };
 
 dll::creature_ptr Hero = nullptr;
 bool move_hero = false;
+
+bool cloak_on = false;
+bool mail_on = false;
 
 std::vector<dll::asset_ptr> vObstacles;
 std::vector<dll::asset_ptr> vCrystals;
@@ -257,8 +260,11 @@ void InitGame()
     club_lifes = 100;
     axe_lifes = 100;
     sword_lifes = 100;
-    cloak_lifes = 100;
-    mail_lifes = 100;
+
+    cloak_lifes = 0;
+    mail_lifes = 0;
+    cloak_on = false;
+    mail_on = false;
 
     move_hero = false;
 
@@ -1572,7 +1578,46 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             }
         }
 
-
+        if (!vAssets.empty() && Hero)
+        {
+            for (std::vector<dll::asset_ptr>::iterator asset = vAssets.begin(); asset < vAssets.end(); asset++)
+            {
+                if (!(Hero->x > (*asset)->ex || Hero->ex<(*asset)->x || Hero->y>(*asset)->ey || Hero->ey < (*asset)->y))
+                {
+                    if ((*asset)->CheckFlag(gold_flag))score += 50 * level;
+                    if ((*asset)->CheckFlag(potion_flag))Hero->lifes = 200;
+                    if ((*asset)->CheckFlag(club_flag))
+                    {
+                        Hero->Transform(hero_club_flag);
+                        club_lifes = 100;
+                    }
+                    if ((*asset)->CheckFlag(axe_flag))
+                    {
+                        Hero->Transform(hero_axe_flag);
+                        club_lifes = 100;
+                    }
+                    if ((*asset)->CheckFlag(sword_flag))
+                    {
+                        Hero->Transform(hero_sword_flag);
+                        club_lifes = 100;
+                    }
+                    if ((*asset)->CheckFlag(cloak_flag))
+                    {
+                        cloak_lifes = 100;
+                        cloak_on = true;
+                    }
+                    if ((*asset)->CheckFlag(mail_flag))
+                    {
+                        mail_lifes = 200;
+                        mail_on = true;
+                    }
+                    (*asset)->Release();
+                    vAssets.erase(asset);
+                    if (sound)mciSendString(L"play .\\res\\snd\\takeasset.wav", NULL, NULL, NULL);
+                    break;
+                }
+            }
+        }
 
 
 
@@ -1646,6 +1691,59 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             else Draw->DrawTextW(L"ЗВУЦИ ON / OFF", 15, nrmTextFormat, b2Rect, txtBrush);
             if (b3Hglt) Draw->DrawTextW(L"ПОМОЩ ЗА ИГРАТА", 16, nrmTextFormat, b3Rect, hgltBrush);
             else Draw->DrawTextW(L"ПОМОЩ ЗА ИГРАТА", 16, nrmTextFormat, b3Rect, txtBrush);
+        }
+
+        if (nrmTextFormat && hgltBrush && inactBrush)
+        {
+            wchar_t stat_txt[150] = L"\0";
+            wchar_t add[5] = L"\0";
+            int stat_size = 0;
+
+            wcscpy_s(stat_txt, current_player);
+            wcscat_s(stat_txt, L", резултат: ");
+            wsprintf(add, L"%d", score);
+            wcscat_s(stat_txt, add);
+            wcscat_s(stat_txt, L", време: ");
+            if (mins < 10)wcscat_s(stat_txt, L"0");
+            wsprintf(add, L"%d", mins);
+            wcscat_s(stat_txt, add);
+            wcscat_s(stat_txt, L", : ");
+            if (secs - mins * 60 < 10)wcscat_s(stat_txt, L"0");
+            wsprintf(add, L"%d", secs - mins * 60);
+            wcscat_s(stat_txt, add);
+            
+            for (int i = 0; i < 150; ++i)
+            {
+                if (stat_txt[i] != '\0')stat_size++;
+                else break;
+            }
+            Draw->DrawTextW(stat_txt, stat_size, nrmTextFormat,
+                D2D1::RectF(5.0f, ground + 5.0f, scr_width * 2 / 3, scr_height), hgltBrush);
+            //////////////////////////////////////////////
+            wchar_t armor_txt[30] = L"\0";
+            wchar_t arm_add[5] = L"\0";
+            int arm_size = 0;
+            
+            if (!cloak_on && !mail_on)
+                Draw->DrawTextW(L"НЯМА БРОНЯ !", 15, nrmTextFormat,
+                    D2D1::RectF(scr_width - scr_width / 3, ground + 5.0f, scr_width, scr_height), inactBrush);
+            else
+            {
+                if (cloak_on)wcscpy_s(armor_txt, L"наметало: ");
+                wsprintf(arm_add, L"%d", cloak_lifes);
+                wcscat_s(armor_txt, arm_add);
+                if(mail_on)wcscpy_s(armor_txt, L"броня: ");
+                wsprintf(arm_add, L"%d", mail_lifes);
+                wcscat_s(armor_txt, arm_add);
+                for (int i = 0; i < 30; i++)
+                {
+                    if (armor_txt[i] != '\0')arm_size++;
+                    else break;
+                }
+                Draw->DrawTextW(armor_txt, arm_size, nrmTextFormat,
+                    D2D1::RectF(scr_width - scr_width / 3, ground + 5.0f, scr_width, scr_height), hgltBrush);
+            }
+            
         }
         ///////////////////////////////////////////////////
 
