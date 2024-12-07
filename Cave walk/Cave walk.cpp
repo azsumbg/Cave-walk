@@ -280,31 +280,86 @@ void InitGame()
     for (float i = -50.0f; i < map_height - 50.0f; i += 50.0f)
         vObstacles.push_back(dll::AssetFactory(stone_brick_flag, map_width - 50.0f, i));
 
-    float current_crystal_x = 100.0f + static_cast<float>(RandGenerator(50, 100));
+    float current_crystal_x = 20.0f + static_cast<float>(RandGenerator(30, 50));
     float current_crystal_y = -40.0f;
     for (int i = 0; i < 9 + level; i++)
     {
         if (current_crystal_x <= map_width - 100.0f)
         {
             vCrystals.push_back(dll::AssetFactory(crystal_flag, current_crystal_x, current_crystal_y));
-            current_crystal_x += static_cast<float>(RandGenerator(0, 100));
+            current_crystal_x += static_cast<float>(RandGenerator(30, 50));
         }
         else
         {
             if (current_crystal_y <= ground - 60.0f)
             {
                 vCrystals.push_back(dll::AssetFactory(crystal_flag, current_crystal_x, current_crystal_y));
-                current_crystal_y += static_cast<float>(RandGenerator(0, 100));
+                current_crystal_y += static_cast<float>(RandGenerator(50, 100));
             }
             else
             {
                 vCrystals.push_back(dll::AssetFactory(crystal_flag, current_crystal_x, current_crystal_y));
-                current_crystal_x -= static_cast<float>(RandGenerator(0, 100));
+                current_crystal_x -= static_cast<float>(RandGenerator(30, 50));
             }
         }
     }
 
+    if (!vObstacles.empty() && !vCrystals.empty() && Hero)
+    {
+        float current_brick_x = 180.0f;
+        float current_brick_y = 60.0f;
 
+        for (int i = 0; i < 25; i++)
+        {
+            bool one_ok = false;
+            dll::asset_ptr Dummy = nullptr;
+
+            while (!one_ok)
+            {
+                one_ok = true;
+                int atype = RandGenerator(0, 1);
+                
+                if (atype == 0)Dummy = dll::AssetFactory(red_brick_flag, current_brick_x, current_brick_y);
+                else Dummy = dll::AssetFactory(stone_brick_flag, current_brick_x, current_brick_y);
+
+                for (int i = 0; i < vObstacles.size(); ++i)
+                {
+                    if (!(Dummy->x > vObstacles[i]->ex || Dummy->ex<vObstacles[i]->x ||
+                        Dummy->y>vObstacles[i]->ey || Dummy->ey < vObstacles[i]->y))
+                    {
+                        one_ok = false;
+                        break;
+                    }
+                }
+                for (int i = 0; i < vCrystals.size(); ++i)
+                {
+                    if (!(Dummy->x > vCrystals[i]->ex || Dummy->ex < vCrystals[i]->x ||
+                        Dummy->y > vCrystals[i]->ey || Dummy->ey < vCrystals[i]->y))
+                    {
+                        one_ok = false;
+                        break;
+                    }
+                }
+                if (!(Dummy->x > Hero->ex || Dummy->ex < Hero->x ||
+                    Dummy->y > Hero->ey || Dummy->ey < Hero->y))
+                {
+                    one_ok = false;
+                    break;
+                }
+                
+                current_brick_x += (float)(RandGenerator(0, 100));
+                if (current_brick_x >= map_width - 100.0f)
+                {
+                    current_brick_x = 180.0f;
+                    current_brick_y += (float)(RandGenerator(120, 150));
+                }
+
+                if (one_ok)vObstacles.push_back(Dummy);
+                else Dummy->Release();            
+
+            }
+        }
+    }
 
 }
 
@@ -504,7 +559,7 @@ LRESULT CALLBACK bWinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPa
                 for (int i = 0; i < ObstacleChecker.size(); i++)
                 {
                     dll::PROTON anObstacle(vObstacles[i]->x, vObstacles[i]->y,
-                        vObstacles[i]->ex, vObstacles[i]->ey);
+                        50.0f, 50.0f);
                     ObstacleChecker.push_back(anObstacle);
                 }
 
@@ -1096,13 +1151,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             for (int i = 0; i < ObstacleChecker.size(); i++)
             {
                 dll::PROTON anObstacle(vObstacles[i]->x, vObstacles[i]->y,
-                    vObstacles[i]->ex, vObstacles[i]->ey);
+                    50.0f, 50.0f);
                 ObstacleChecker.push_back(anObstacle);
             }
 
             if (move_hero)
             {
-                Hero->Move((float)(level), ObstacleChecker);
+                if (Hero->Move((float)(level), ObstacleChecker))move_hero = false;
             
                 if (Hero->ex >= scr_width - 60.0f)
                 {
