@@ -151,8 +151,8 @@ dll::creature_ptr Hero = nullptr;
 bool move_hero = false;
 
 std::vector<dll::asset_ptr> vObstacles;
-std::vector<dll::asset_ptr>vCrystals;
-
+std::vector<dll::asset_ptr> vCrystals;
+std::vector<dll::asset_ptr> vAssets;
 
 
 ///////////////////////////////////////////
@@ -272,6 +272,10 @@ void InitGame()
     if (!vCrystals.empty())
         for (int i = 0; i < vCrystals.size(); ++i)ClearHeap(&vCrystals[i]);
     vCrystals.clear();
+
+    if (!vAssets.empty())
+        for (int i = 0; i < vAssets.size(); ++i)ClearHeap(&vAssets[i]);
+    vAssets.clear();
     
     for (float i = -200.0f; i <= map_width - 50.0f; i += 50.0f)
         vObstacles.push_back(dll::AssetFactory(stone_brick_flag, i, map_height - 50.0f));
@@ -306,7 +310,7 @@ void InitGame()
 
     if (!vObstacles.empty() && !vCrystals.empty() && Hero)
     {
-        float current_brick_x = 180.0f;
+        float current_brick_x = 100.0f;
         float current_brick_y = 60.0f;
 
         for (int i = 0; i < 25; i++)
@@ -347,10 +351,13 @@ void InitGame()
                     break;
                 }
                 
-                current_brick_x += (float)(RandGenerator(0, 100));
+                int temp_current_x = RandGenerator(50, 100);
+                if (temp_current_x % 50 == 0)temp_current_x = 50;
+                else temp_current_x += 60;
+                current_brick_x += temp_current_x;
                 if (current_brick_x >= map_width - 100.0f)
                 {
-                    current_brick_x = 180.0f;
+                    current_brick_x = 100.0f;
                     current_brick_y += (float)(RandGenerator(120, 150));
                 }
 
@@ -361,6 +368,301 @@ void InitGame()
         }
     }
 
+    if (!vObstacles.empty() && !vCrystals.empty() && Hero)
+    {
+        for (int i = 0; i < 10; ++i)
+        {
+            bool is_ok = false;
+            int choice = RandGenerator(0, 10);
+
+            if (choice == 0)
+            {
+                while (!is_ok)
+                {
+                    is_ok = true;
+
+                    dll::asset_ptr Dummy = dll::AssetFactory(gold_flag, (float)(RandGenerator(-100, (int)(map_width - 100))),
+                        (float)(RandGenerator(-10, 300)));
+
+                    for (int i = 0; i < vObstacles.size(); ++i)
+                    {
+                        if (!(Dummy->x > vObstacles[i]->ex || Dummy->ex<vObstacles[i]->x
+                            || Dummy->y>vObstacles[i]->ey || Dummy->ey < vObstacles[i]->y))
+                        {
+                            is_ok = false;
+                            break;
+                        }
+                    }
+
+                    for (int i = 0; i < vCrystals.size(); ++i)
+                    {
+                        if (!(Dummy->x > vCrystals[i]->ex || Dummy->ex < vCrystals[i]->x ||
+                            Dummy->y > vCrystals[i]->ey || Dummy->ey < vCrystals[i]->y))
+                        {
+                            is_ok = false;
+                            break;
+                        }
+                    }
+
+                    if (!(Dummy->x > Hero->ex || Dummy->ex < Hero->x ||
+                        Dummy->y > Hero->ey || Dummy->ey < Hero->y))
+                    {
+                        is_ok = false;
+                        break;
+                    }
+
+                    if (is_ok)vAssets.push_back(Dummy);
+                }
+            }
+            if (choice == 1)
+            {
+                bool is_ok = false;
+
+                while (!is_ok)
+                {
+                    is_ok = true;
+
+                    dll::asset_ptr Dummy = dll::AssetFactory(club_flag, (float)(RandGenerator(-100, (int)(map_width - 100))),
+                        (float)(RandGenerator(-10, 300)));
+
+                    for (int i = 0; i < vObstacles.size(); ++i)
+                    {
+                        if (!(Dummy->x > vObstacles[i]->ex || Dummy->ex<vObstacles[i]->x
+                            || Dummy->y>vObstacles[i]->ey || Dummy->ey < vObstacles[i]->y))
+                        {
+                            is_ok = false;
+                            break;
+                        }
+                    }
+
+                    for (int i = 0; i < vCrystals.size(); ++i)
+                    {
+                        if (!(Dummy->x > vCrystals[i]->ex || Dummy->ex < vCrystals[i]->x ||
+                            Dummy->y > vCrystals[i]->ey || Dummy->ey < vCrystals[i]->y))
+                        {
+                            is_ok = false;
+                            break;
+                        }
+                    }
+
+                    if (!(Dummy->x > Hero->ex || Dummy->ex < Hero->x ||
+                        Dummy->y > Hero->ey || Dummy->ey < Hero->y))
+                    {
+                        is_ok = false;
+                        break;
+                    }
+
+                    if (is_ok)vAssets.push_back(Dummy);
+                }
+            }
+            if (choice == 2)
+            {
+                bool is_ok = false;
+
+                while (!is_ok)
+                {
+                    is_ok = true;
+
+                    dll::asset_ptr Dummy = dll::AssetFactory(axe_flag, (float)(RandGenerator(-100, (int)(map_width - 100))),
+                        (float)(RandGenerator(-10, 300)));
+
+                    for (int i = 0; i < vObstacles.size(); ++i)
+                    {
+                        if (!(Dummy->x > vObstacles[i]->ex || Dummy->ex<vObstacles[i]->x
+                            || Dummy->y>vObstacles[i]->ey || Dummy->ey < vObstacles[i]->y))
+                        {
+                            is_ok = false;
+                            break;
+                        }
+                    }
+
+                    for (int i = 0; i < vCrystals.size(); ++i)
+                    {
+                        if (!(Dummy->x > vCrystals[i]->ex || Dummy->ex < vCrystals[i]->x ||
+                            Dummy->y > vCrystals[i]->ey || Dummy->ey < vCrystals[i]->y))
+                        {
+                            is_ok = false;
+                            break;
+                        }
+                    }
+
+                    if (!(Dummy->x > Hero->ex || Dummy->ex < Hero->x ||
+                        Dummy->y > Hero->ey || Dummy->ey < Hero->y))
+                    {
+                        is_ok = false;
+                        break;
+                    }
+
+                    if (is_ok)vAssets.push_back(Dummy);
+                }
+            }
+            if (choice == 3)
+            {
+                bool is_ok = false;
+
+                while (!is_ok)
+                {
+                    is_ok = true;
+
+                    dll::asset_ptr Dummy = dll::AssetFactory(sword_flag, (float)(RandGenerator(-100, (int)(map_width - 100))),
+                        (float)(RandGenerator(-10, 300)));
+
+                    for (int i = 0; i < vObstacles.size(); ++i)
+                    {
+                        if (!(Dummy->x > vObstacles[i]->ex || Dummy->ex<vObstacles[i]->x
+                            || Dummy->y>vObstacles[i]->ey || Dummy->ey < vObstacles[i]->y))
+                        {
+                            is_ok = false;
+                            break;
+                        }
+                    }
+
+                    for (int i = 0; i < vCrystals.size(); ++i)
+                    {
+                        if (!(Dummy->x > vCrystals[i]->ex || Dummy->ex < vCrystals[i]->x ||
+                            Dummy->y > vCrystals[i]->ey || Dummy->ey < vCrystals[i]->y))
+                        {
+                            is_ok = false;
+                            break;
+                        }
+                    }
+
+                    if (!(Dummy->x > Hero->ex || Dummy->ex < Hero->x ||
+                        Dummy->y > Hero->ey || Dummy->ey < Hero->y))
+                    {
+                        is_ok = false;
+                        break;
+                    }
+
+                    if (is_ok)vAssets.push_back(Dummy);
+                }
+            }
+            if (choice == 4)
+            {
+                bool is_ok = false;
+
+                while (!is_ok)
+                {
+                    is_ok = true;
+
+                    dll::asset_ptr Dummy = dll::AssetFactory(cloak_flag, (float)(RandGenerator(-100, (int)(map_width - 100))),
+                        (float)(RandGenerator(-10, 300)));
+
+                    for (int i = 0; i < vObstacles.size(); ++i)
+                    {
+                        if (!(Dummy->x > vObstacles[i]->ex || Dummy->ex<vObstacles[i]->x
+                            || Dummy->y>vObstacles[i]->ey || Dummy->ey < vObstacles[i]->y))
+                        {
+                            is_ok = false;
+                            break;
+                        }
+                    }
+
+                    for (int i = 0; i < vCrystals.size(); ++i)
+                    {
+                        if (!(Dummy->x > vCrystals[i]->ex || Dummy->ex < vCrystals[i]->x ||
+                            Dummy->y > vCrystals[i]->ey || Dummy->ey < vCrystals[i]->y))
+                        {
+                            is_ok = false;
+                            break;
+                        }
+                    }
+
+                    if (!(Dummy->x > Hero->ex || Dummy->ex < Hero->x ||
+                        Dummy->y > Hero->ey || Dummy->ey < Hero->y))
+                    {
+                        is_ok = false;
+                        break;
+                    }
+
+                    if (is_ok)vAssets.push_back(Dummy);
+                }
+            }
+            if (choice == 5)
+            {
+                bool is_ok = false;
+
+                while (!is_ok)
+                {
+                    is_ok = true;
+
+                    dll::asset_ptr Dummy = dll::AssetFactory(mail_flag, (float)(RandGenerator(-100, (int)(map_width - 100))),
+                        (float)(RandGenerator(-10, 300)));
+
+                    for (int i = 0; i < vObstacles.size(); ++i)
+                    {
+                        if (!(Dummy->x > vObstacles[i]->ex || Dummy->ex<vObstacles[i]->x
+                            || Dummy->y>vObstacles[i]->ey || Dummy->ey < vObstacles[i]->y))
+                        {
+                            is_ok = false;
+                            break;
+                        }
+                    }
+
+                    for (int i = 0; i < vCrystals.size(); ++i)
+                    {
+                        if (!(Dummy->x > vCrystals[i]->ex || Dummy->ex < vCrystals[i]->x ||
+                            Dummy->y > vCrystals[i]->ey || Dummy->ey < vCrystals[i]->y))
+                        {
+                            is_ok = false;
+                            break;
+                        }
+                    }
+
+                    if (!(Dummy->x > Hero->ex || Dummy->ex < Hero->x ||
+                        Dummy->y > Hero->ey || Dummy->ey < Hero->y))
+                    {
+                        is_ok = false;
+                        break;
+                    }
+
+                    if (is_ok)vAssets.push_back(Dummy);
+
+                }
+            }
+            if (choice == 6)
+            {
+                bool is_ok = false;
+
+                while (!is_ok)
+                {
+                    is_ok = true;
+
+                    dll::asset_ptr Dummy = dll::AssetFactory(potion_flag, (float)(RandGenerator(-100, (int)(map_width - 100))),
+                        (float)(RandGenerator(-10, 300)));
+
+                    for (int i = 0; i < vObstacles.size(); ++i)
+                    {
+                        if (!(Dummy->x > vObstacles[i]->ex || Dummy->ex<vObstacles[i]->x
+                            || Dummy->y>vObstacles[i]->ey || Dummy->ey < vObstacles[i]->y))
+                        {
+                            is_ok = false;
+                            break;
+                        }
+                    }
+
+                    for (int i = 0; i < vCrystals.size(); ++i)
+                    {
+                        if (!(Dummy->x > vCrystals[i]->ex || Dummy->ex < vCrystals[i]->x ||
+                            Dummy->y > vCrystals[i]->ey || Dummy->ey < vCrystals[i]->y))
+                        {
+                            is_ok = false;
+                            break;
+                        }
+                    }
+
+                    if (!(Dummy->x > Hero->ex || Dummy->ex < Hero->x ||
+                        Dummy->y > Hero->ey || Dummy->ey < Hero->y))
+                    {
+                        is_ok = false;
+                        break;
+                    }
+
+                    if (is_ok)vAssets.push_back(Dummy);
+                }
+            }
+        }
+    }
 }
 
 INT_PTR CALLBACK bDlgProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lParam)
@@ -570,23 +872,7 @@ LRESULT CALLBACK bWinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPa
         break;
 
     case WM_KEYDOWN:
-
-        switch (LOWORD(wParam))
-        {
-        case VK_LEFT:
-        
-            break;
-
-        case VK_RIGHT:
-            break;
-
-        case VK_UP:
-            break;
-
-        case VK_DOWN:
-            break;
-        }
-
+        if (LOWORD(wParam) == VK_SPACE)move_hero = false;
         break;
 
     default: return DefWindowProc(hwnd, ReceivedMsg, wParam, lParam);
@@ -1157,90 +1443,117 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
             if (move_hero)
             {
-                if (Hero->Move((float)(level), ObstacleChecker))move_hero = false;
-            
-                if (Hero->ex >= scr_width - 60.0f)
+                bool checker = Hero->Move((float)(level), ObstacleChecker);
+                
+                if (!checker)
                 {
-                    if (ViewMapRect.right > scr_width)
+                    if (Hero->ex >= scr_width - 60.0f)
                     {
-                        ViewMapRect.left -= (float)(level);
-                        ViewMapRect.right -= (float)(level);
-                        if (!vObstacles.empty())
-                            for (int i = 0; i < vObstacles.size(); ++i)
-                            {
-                                vObstacles[i]->x -= (float)(level);
-                                vObstacles[i]->SetEdges();
-                            }
-                        if (!vCrystals.empty())
-                            for (int i = 0; i < vCrystals.size(); ++i)
-                            {
-                                vCrystals[i]->x -= (float)(level);
-                                vCrystals[i]->SetEdges();
-                            }
+                        if (ViewMapRect.right > scr_width)
+                        {
+                            ViewMapRect.left -= (float)(level);
+                            ViewMapRect.right -= (float)(level);
+                            if (!vObstacles.empty())
+                                for (int i = 0; i < vObstacles.size(); ++i)
+                                {
+                                    vObstacles[i]->x -= (float)(level);
+                                    vObstacles[i]->SetEdges();
+                                }
+                            if (!vCrystals.empty())
+                                for (int i = 0; i < vCrystals.size(); ++i)
+                                {
+                                    vCrystals[i]->x -= (float)(level);
+                                    vCrystals[i]->SetEdges();
+                                }
+                            if (!vAssets.empty())
+                                for (int i = 0; i < vAssets.size(); ++i)
+                                {
+                                    vAssets[i]->x -= (float)(level);
+                                    vAssets[i]->SetEdges();
+                                }
+                        }
                     }
-                }
-                if (Hero->x <= 60.0f)
-                {
-                    if (ViewMapRect.left < 0)
+                    if (Hero->x <= 60.0f)
                     {
-                        ViewMapRect.left += (float)(level);
-                        ViewMapRect.right += (float)(level);
-                        if (!vObstacles.empty())
-                            for (int i = 0; i < vObstacles.size(); ++i)
-                            {
-                                vObstacles[i]->x += (float)(level);
-                                vObstacles[i]->SetEdges();
-                            }
-                        if (!vCrystals.empty())
-                            for (int i = 0; i < vCrystals.size(); ++i)
-                            {
-                                vCrystals[i]->x += (float)(level);
-                                vCrystals[i]->SetEdges();
-                            }
-                    }
-                }
-            
-                if (Hero->ey >= ground - 60.0f)
-                {
-                    if (ViewMapRect.bottom > scr_height)
-                    {
-                        ViewMapRect.bottom -= (float)(level);
-                        ViewMapRect.top -= (float)(level);
-                        if (!vObstacles.empty())
-                            for (int i = 0; i < vObstacles.size(); ++i)
-                            {
-                                vObstacles[i]->y -= (float)(level);
-                                vObstacles[i]->SetEdges();
-                            }
-                        if (!vCrystals.empty())
-                            for (int i = 0; i < vCrystals.size(); ++i)
-                            {
-                                vCrystals[i]->y -= (float)(level);
-                                vCrystals[i]->SetEdges();
-                            }
-                    }
-                }
-                if (Hero->y <= sky + 60.0f)
-                {
-                    if (ViewMapRect.top < 0)
-                    {
-                        ViewMapRect.top += (float)(level);
-                        ViewMapRect.bottom += (float)(level);
-                        if (!vObstacles.empty())
-                            for (int i = 0; i < vObstacles.size(); ++i)
-                            {
-                                vObstacles[i]->y += (float)(level);
-                                vObstacles[i]->SetEdges();
-                            }
-                        if (!vCrystals.empty())
-                            for (int i = 0; i < vCrystals.size(); ++i)
-                            {
-                                vCrystals[i]->y += (float)(level);
-                                vCrystals[i]->SetEdges();
-                            }
+                        if (ViewMapRect.left < 0)
+                        {
+                            ViewMapRect.left += (float)(level);
+                            ViewMapRect.right += (float)(level);
+                            if (!vObstacles.empty())
+                                for (int i = 0; i < vObstacles.size(); ++i)
+                                {
+                                    vObstacles[i]->x += (float)(level);
+                                    vObstacles[i]->SetEdges();
+                                }
+                            if (!vCrystals.empty())
+                                for (int i = 0; i < vCrystals.size(); ++i)
+                                {
+                                    vCrystals[i]->x += (float)(level);
+                                    vCrystals[i]->SetEdges();
+                                }
+                            if (!vAssets.empty())
+                                for (int i = 0; i < vAssets.size(); ++i)
+                                {
+                                    vAssets[i]->x += (float)(level);
+                                    vAssets[i]->SetEdges();
+                                }
+                        }
                     }
 
+                    if (Hero->ey >= ground - 60.0f)
+                    {
+                        if (ViewMapRect.bottom > scr_height)
+                        {
+                            ViewMapRect.bottom -= (float)(level);
+                            ViewMapRect.top -= (float)(level);
+                            if (!vObstacles.empty())
+                                for (int i = 0; i < vObstacles.size(); ++i)
+                                {
+                                    vObstacles[i]->y -= (float)(level);
+                                    vObstacles[i]->SetEdges();
+                                }
+                            if (!vCrystals.empty())
+                                for (int i = 0; i < vCrystals.size(); ++i)
+                                {
+                                    vCrystals[i]->y -= (float)(level);
+                                    vCrystals[i]->SetEdges();
+                                }
+                            if (!vAssets.empty())
+                                for (int i = 0; i < vAssets.size(); ++i)
+                                {
+                                    vAssets[i]->y -= (float)(level);
+                                    vAssets[i]->SetEdges();
+                                }
+                        }
+                    }
+                    if (Hero->y <= sky + 60.0f)
+                    {
+                        if (ViewMapRect.top < 0)
+                        {
+                            ViewMapRect.top += (float)(level);
+                            ViewMapRect.bottom += (float)(level);
+                            if (!vObstacles.empty())
+                                for (int i = 0; i < vObstacles.size(); ++i)
+                                {
+                                    vObstacles[i]->y += (float)(level);
+                                    vObstacles[i]->SetEdges();
+                                }
+                            if (!vCrystals.empty())
+                                for (int i = 0; i < vCrystals.size(); ++i)
+                                {
+                                    vCrystals[i]->y += (float)(level);
+                                    vCrystals[i]->SetEdges();
+                                }
+                            if (!vAssets.empty())
+                                for (int i = 0; i < vAssets.size(); ++i)
+                                {
+                                    vAssets[i]->y += (float)(level);
+                                    vAssets[i]->SetEdges();
+                                }
+                        }
+                    }
                 }
+                else move_hero = false;
             }
         }
 
@@ -1297,7 +1610,26 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             for (int i = 0; i < vCrystals.size(); i++)
                 Draw->DrawBitmap(bmpCrystal, D2D1::RectF(vCrystals[i]->x, vCrystals[i]->y, vCrystals[i]->ex, vCrystals[i]->ey));
         }
-
+        if (!vAssets.empty())
+        {
+            for (int i = 0; i < vAssets.size(); ++i)
+            {
+                if (vAssets[i]->CheckFlag(gold_flag))
+                    Draw->DrawBitmap(bmpGold, D2D1::RectF(vAssets[i]->x, vAssets[i]->y, vAssets[i]->ex, vAssets[i]->ey));
+                if (vAssets[i]->CheckFlag(club_flag))
+                    Draw->DrawBitmap(bmpClub, D2D1::RectF(vAssets[i]->x, vAssets[i]->y, vAssets[i]->ex, vAssets[i]->ey));
+                if (vAssets[i]->CheckFlag(axe_flag))
+                    Draw->DrawBitmap(bmpAxe, D2D1::RectF(vAssets[i]->x, vAssets[i]->y, vAssets[i]->ex, vAssets[i]->ey));
+                if (vAssets[i]->CheckFlag(sword_flag))
+                    Draw->DrawBitmap(bmpSword, D2D1::RectF(vAssets[i]->x, vAssets[i]->y, vAssets[i]->ex, vAssets[i]->ey));
+                if (vAssets[i]->CheckFlag(potion_flag))
+                    Draw->DrawBitmap(bmpPotion, D2D1::RectF(vAssets[i]->x, vAssets[i]->y, vAssets[i]->ex, vAssets[i]->ey));
+                if (vAssets[i]->CheckFlag(mail_flag))
+                    Draw->DrawBitmap(bmpMail, D2D1::RectF(vAssets[i]->x, vAssets[i]->y, vAssets[i]->ex, vAssets[i]->ey));
+                if (vAssets[i]->CheckFlag(cloak_flag))
+                    Draw->DrawBitmap(bmpCloak, D2D1::RectF(vAssets[i]->x, vAssets[i]->y, vAssets[i]->ex, vAssets[i]->ey));
+            }
+        }
 
 
         ///////////////////////////////////////////////////
