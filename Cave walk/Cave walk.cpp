@@ -151,7 +151,7 @@ dll::creature_ptr Hero = nullptr;
 bool move_hero = false;
 
 std::vector<dll::asset_ptr> vObstacles;
-
+std::vector<dll::asset_ptr>vCrystals;
 
 
 
@@ -268,6 +268,10 @@ void InitGame()
     if (!vObstacles.empty())
     for (int i = 0; i < vObstacles.size(); ++i)ClearHeap(&vObstacles[i]);
     vObstacles.clear();
+
+    if (!vCrystals.empty())
+        for (int i = 0; i < vCrystals.size(); ++i)ClearHeap(&vCrystals[i]);
+    vCrystals.clear();
     
     for (float i = -200.0f; i <= map_width - 50.0f; i += 50.0f)
         vObstacles.push_back(dll::AssetFactory(stone_brick_flag, i, map_height - 50.0f));
@@ -275,6 +279,33 @@ void InitGame()
         vObstacles.push_back(dll::AssetFactory(stone_brick_flag, -200.0f, i));
     for (float i = -50.0f; i < map_height - 50.0f; i += 50.0f)
         vObstacles.push_back(dll::AssetFactory(stone_brick_flag, map_width - 50.0f, i));
+
+    float current_crystal_x = 100.0f + static_cast<float>(RandGenerator(50, 100));
+    float current_crystal_y = -40.0f;
+    for (int i = 0; i < 9 + level; i++)
+    {
+        if (current_crystal_x <= map_width - 100.0f)
+        {
+            vCrystals.push_back(dll::AssetFactory(crystal_flag, current_crystal_x, current_crystal_y));
+            current_crystal_x += static_cast<float>(RandGenerator(0, 100));
+        }
+        else
+        {
+            if (current_crystal_y <= ground - 60.0f)
+            {
+                vCrystals.push_back(dll::AssetFactory(crystal_flag, current_crystal_x, current_crystal_y));
+                current_crystal_y += static_cast<float>(RandGenerator(0, 100));
+            }
+            else
+            {
+                vCrystals.push_back(dll::AssetFactory(crystal_flag, current_crystal_x, current_crystal_y));
+                current_crystal_x -= static_cast<float>(RandGenerator(0, 100));
+            }
+        }
+    }
+
+
+
 }
 
 INT_PTR CALLBACK bDlgProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lParam)
@@ -1085,6 +1116,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                                 vObstacles[i]->x -= (float)(level);
                                 vObstacles[i]->SetEdges();
                             }
+                        if (!vCrystals.empty())
+                            for (int i = 0; i < vCrystals.size(); ++i)
+                            {
+                                vCrystals[i]->x -= (float)(level);
+                                vCrystals[i]->SetEdges();
+                            }
                     }
                 }
                 if (Hero->x <= 60.0f)
@@ -1098,6 +1135,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                             {
                                 vObstacles[i]->x += (float)(level);
                                 vObstacles[i]->SetEdges();
+                            }
+                        if (!vCrystals.empty())
+                            for (int i = 0; i < vCrystals.size(); ++i)
+                            {
+                                vCrystals[i]->x += (float)(level);
+                                vCrystals[i]->SetEdges();
                             }
                     }
                 }
@@ -1114,6 +1157,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                                 vObstacles[i]->y -= (float)(level);
                                 vObstacles[i]->SetEdges();
                             }
+                        if (!vCrystals.empty())
+                            for (int i = 0; i < vCrystals.size(); ++i)
+                            {
+                                vCrystals[i]->y -= (float)(level);
+                                vCrystals[i]->SetEdges();
+                            }
                     }
                 }
                 if (Hero->y <= sky + 60.0f)
@@ -1128,13 +1177,32 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                                 vObstacles[i]->y += (float)(level);
                                 vObstacles[i]->SetEdges();
                             }
+                        if (!vCrystals.empty())
+                            for (int i = 0; i < vCrystals.size(); ++i)
+                            {
+                                vCrystals[i]->y += (float)(level);
+                                vCrystals[i]->SetEdges();
+                            }
                     }
 
                 }
             }
         }
 
-
+        if (Hero && !vCrystals.empty())
+        {
+            for (std::vector<dll::asset_ptr>::iterator crystal = vCrystals.begin(); crystal < vCrystals.end(); ++crystal)
+            {
+                if (!(Hero->x > (*crystal)->ex || Hero->ex<(*crystal)->x || Hero->y>(*crystal)->ey || Hero->ey < (*crystal)->y))
+                {
+                    score += 10 + level;
+                    if (sound)mciSendString(L"play .\\res\\snd\\crystal.wav", NULL, NULL, NULL);
+                    (*crystal)->Release();
+                    vCrystals.erase(crystal);
+                    break;
+                }
+            }
+        }
 
 
 
@@ -1169,7 +1237,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                         vObstacles[i]->ex, vObstacles[i]->ey));
             }
         }
-        
+        if (!vCrystals.empty())
+        {
+            for (int i = 0; i < vCrystals.size(); i++)
+                Draw->DrawBitmap(bmpCrystal, D2D1::RectF(vCrystals[i]->x, vCrystals[i]->y, vCrystals[i]->ex, vCrystals[i]->ey));
+        }
+
+
+
+        ///////////////////////////////////////////////////
         if (bckgBrush)Draw->FillRectangle(D2D1::RectF(0, 0, scr_width, 50.0f), bckgBrush);
         if (txtBrush && hgltBrush && inactBrush && nrmTextFormat)
         {
@@ -1184,12 +1260,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             if (b3Hglt) Draw->DrawTextW(L"ПОМОЩ ЗА ИГРАТА", 16, nrmTextFormat, b3Rect, hgltBrush);
             else Draw->DrawTextW(L"ПОМОЩ ЗА ИГРАТА", 16, nrmTextFormat, b3Rect, txtBrush);
         }
-        
-        
-        
-        
-        
-        
+        ///////////////////////////////////////////////////
+
+
         if (Hero)
         {
             switch (Hero->dir)
