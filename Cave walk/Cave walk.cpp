@@ -1980,7 +1980,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                 else break;
             }
             Draw->DrawTextW(stat_txt, stat_size, nrmTextFormat,
-                D2D1::RectF(5.0f, ground + 5.0f, scr_width * 2 / 3, scr_height), hgltBrush);
+                D2D1::RectF(5.0f, ground + 5.0f, scr_width * 2 / 3, scr_height), HurtBrush);
             //////////////////////////////////////////////
             wchar_t armor_txt[30] = L"\0";
             wchar_t arm_add[5] = L"\0";
