@@ -101,6 +101,11 @@ ID2D1SolidColorBrush* txtBrush{ nullptr };
 ID2D1SolidColorBrush* hgltBrush{ nullptr };
 ID2D1SolidColorBrush* inactBrush{ nullptr };
 
+ID2D1SolidColorBrush* LifeBrush{ nullptr };
+ID2D1SolidColorBrush* HurtBrush{ nullptr };
+ID2D1SolidColorBrush* CritBrush{ nullptr };
+
+
 IDWriteFactory* iWriteFactory{ nullptr };
 IDWriteTextFormat* nrmTextFormat{ nullptr };
 IDWriteTextFormat* midTextFormat{ nullptr };
@@ -156,7 +161,7 @@ bool mail_on = false;
 std::vector<dll::asset_ptr> vObstacles;
 std::vector<dll::asset_ptr> vCrystals;
 std::vector<dll::asset_ptr> vAssets;
-
+std::vector<dll::creature_ptr> vEvils;
 
 ///////////////////////////////////////////
 
@@ -188,6 +193,10 @@ void ReleaseResources()
     if (!ClearHeap(&txtBrush))LogError(L"Error releasing txtBrush !");
     if (!ClearHeap(&hgltBrush))LogError(L"Error releasing hgltBrush !");
     if (!ClearHeap(&inactBrush))LogError(L"Error releasing inactBrush !");
+
+    if (!ClearHeap(&LifeBrush))LogError(L"Error releasing txtBrush !");
+    if (!ClearHeap(&HurtBrush))LogError(L"Error releasing txtBrush !");
+    if (!ClearHeap(&CritBrush))LogError(L"Error releasing txtBrush !");
 
     if (!ClearHeap(&iWriteFactory))LogError(L"Error releasing iWriteFactory !");
     if (!ClearHeap(&nrmTextFormat))LogError(L"Error releasing nrmTextFormat !");
@@ -282,6 +291,10 @@ void InitGame()
     if (!vAssets.empty())
         for (int i = 0; i < vAssets.size(); ++i)ClearHeap(&vAssets[i]);
     vAssets.clear();
+
+    if (!vEvils.empty())
+        for (int i = 0; i < vEvils.size(); ++i)ClearHeap(&vEvils[i]);
+    vEvils.clear();
     
     for (float i = -200.0f; i <= map_width - 50.0f; i += 50.0f)
         vObstacles.push_back(dll::AssetFactory(stone_brick_flag, i, map_height - 50.0f));
@@ -669,6 +682,94 @@ void InitGame()
             }
         }
     }
+
+    if (!vObstacles.empty() && Hero)
+    {
+        for (int i = 0; i <= 5 + level; i++)
+        {
+            int atype = RandGenerator(0, 4);
+            bool is_ok = false;
+
+            while (!is_ok)
+            {
+                is_ok = true;
+
+                dll::creature_ptr Dummy = nullptr;
+
+                switch (atype)
+                {
+                case 0:
+                    Dummy = dll::CreatureFactory(evil1_flag, (float)(RandGenerator(250, (int)(map_width)-80)),
+                        (float)(RandGenerator(-50, (int)(ground)-80)));
+                    break;
+
+                case 1:
+                    Dummy = dll::CreatureFactory(evil2_flag, (float)(RandGenerator(250, (int)(map_width)-80)),
+                        (float)(RandGenerator(-50, (int)(ground)-80)));
+                    break;
+
+                case 2:
+                    Dummy = dll::CreatureFactory(evil3_flag, (float)(RandGenerator(250, (int)(map_width)-80)),
+                        (float)(RandGenerator(-50, (int)(ground)-80)));
+                    break;
+
+                case 3:
+                    Dummy = dll::CreatureFactory(evil4_flag, (float)(RandGenerator(250, (int)(map_width)-80)),
+                        (float)(RandGenerator(-50, (int)(ground)-80)));
+                    break;
+
+                case 4:
+                    Dummy = dll::CreatureFactory(evil5_flag, (float)(RandGenerator(250, (int)(map_width)-80)),
+                        (float)(RandGenerator(-50, (int)(ground)-80)));
+                    break;
+                }
+
+                if (Dummy)
+                {
+                    if (!(Hero->x >= Dummy->ex || Hero->ex <= Dummy->x || Hero->y >= Dummy->ey || Hero->ey <= Dummy->y))
+                    {
+                        Dummy->Release();
+                        is_ok = false;
+                        break;
+                    }
+
+                    for (int i = 0; i < vObstacles.size(); i++)
+                    {
+                        if (!(Dummy->x >= vObstacles[i]->ex || Dummy->ex <= vObstacles[i]->x ||
+                            Dummy->y >= vObstacles[i]->ey || Dummy->ey <= vObstacles[i]->y))
+                        {
+                            Dummy->Release();
+                            is_ok = false;
+                            break;
+                        }
+                    }
+
+                    if (is_ok)
+                    {
+                        vEvils.push_back(Dummy);
+                        dll::PROT_CONTAINER Obstacles(vObstacles.size());
+                        if(Obstacles.is_valid())
+                            for (int i = 0; i < vObstacles.size(); ++i)
+                            {
+                                dll::PROTON an_obstacle{ vObstacles[i]->x,vObstacles[i]->y,vObstacles[i]->GetWidth(),
+                                vObstacles[i]->GetHeight() };
+                                Obstacles.push_back(an_obstacle);
+                            }
+                        switch (RandGenerator(0, 1))
+                        {
+                        case 0:
+                            vEvils.back()->Move((float)(level), Obstacles, true, 0, vEvils.back()->y);
+                            break;
+
+                        case 1:
+                            vEvils.back()->Move((float)(level), Obstacles, true, map_width, vEvils.back()->y);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 INT_PTR CALLBACK bDlgProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lParam)
@@ -973,6 +1074,11 @@ void CreateResources()
                 hr = Draw->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Blue), &txtBrush);
                 hr = Draw->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Red), &hgltBrush);
                 hr = Draw->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::DarkGray), &inactBrush);
+
+                hr = Draw->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Green), &LifeBrush);
+                hr = Draw->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Orange), &HurtBrush);
+                hr = Draw->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::DarkRed), &CritBrush);
+
 
                 if (hr != S_OK)
                 {
@@ -1619,10 +1725,45 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             }
         }
 
+        if (!vEvils.empty() && Hero)
+        {
+            for (int i = 0; i < vEvils.size(); ++i)
+            {
+                if (vEvils[i]->Distance(POINT((LONG)(Hero->x), (LONG)(Hero->y)), 
+                    POINT((LONG)(vEvils[i]->x), (LONG)(vEvils[i]->y))) <= 100.0f)
+                {
+                    if (!vObstacles.empty())
+                    {
+                        dll::PROT_CONTAINER Obstacles(vObstacles.size());
+                        if (Obstacles.is_valid())
+                            for (int i = 0; i < vObstacles.size(); ++i)
+                            {
+                                dll::PROTON an_obstacle{ vObstacles[i]->x,vObstacles[i]->y,vObstacles[i]->GetWidth(),
+                                vObstacles[i]->GetHeight() };
+                                Obstacles.push_back(an_obstacle);
+                            }
 
+                        vEvils[i]->Move((float)(level), Obstacles, true, Hero->x, Hero->y);
+                    }
+                }
+                else
+                {
+                    if (!vObstacles.empty())
+                    {
+                        dll::PROT_CONTAINER Obstacles(vObstacles.size());
+                        if (Obstacles.is_valid())
+                            for (int i = 0; i < vObstacles.size(); ++i)
+                            {
+                                dll::PROTON an_obstacle{ vObstacles[i]->x,vObstacles[i]->y,vObstacles[i]->GetWidth(),
+                                vObstacles[i]->GetHeight() };
+                                Obstacles.push_back(an_obstacle);
+                            }
 
-
-
+                        vEvils[i]->Move((float)(level), Obstacles);
+                    }
+                }
+            }
+        }
 
 
 
@@ -1675,7 +1816,53 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                     Draw->DrawBitmap(bmpCloak, D2D1::RectF(vAssets[i]->x, vAssets[i]->y, vAssets[i]->ex, vAssets[i]->ey));
             }
         }
-
+        if (!vEvils.empty())
+        {
+            for (int i = 0; i < vEvils.size(); i++)
+            {
+                if (vEvils[i]->CheckType(evil1_flag))
+                {
+                    if (vEvils[i]->dir == dirs::left)
+                    {
+                        int aframe = vEvils[i]->GetFrame();
+                        Draw->DrawBitmap(bmpEvil1L[aframe], Resizer(bmpEvil1L[aframe], vEvils[i]->x, vEvils[i]->y));
+                    }
+                    else
+                    {
+                        int aframe = vEvils[i]->GetFrame();
+                        Draw->DrawBitmap(bmpEvil1R[aframe], Resizer(bmpEvil1R[aframe], vEvils[i]->x, vEvils[i]->y));
+                    }
+                }
+                if (vEvils[i]->CheckType(evil2_flag))
+                {
+                    int aframe = vEvils[i]->GetFrame();
+                    Draw->DrawBitmap(bmpEvil2[aframe], Resizer(bmpEvil2[aframe], vEvils[i]->x, vEvils[i]->y));
+                }
+                if (vEvils[i]->CheckType(evil3_flag))
+                {
+                    if (vEvils[i]->dir == dirs::left)
+                    {
+                        int aframe = vEvils[i]->GetFrame();
+                        Draw->DrawBitmap(bmpEvil3L[aframe], Resizer(bmpEvil3L[aframe], vEvils[i]->x, vEvils[i]->y));
+                    }
+                    else
+                    {
+                        int aframe = vEvils[i]->GetFrame();
+                        Draw->DrawBitmap(bmpEvil3R[aframe], Resizer(bmpEvil3R[aframe], vEvils[i]->x, vEvils[i]->y));
+                    }
+                }
+                if (vEvils[i]->CheckType(evil4_flag))
+                {
+                    int aframe = vEvils[i]->GetFrame();
+                    Draw->DrawBitmap(bmpEvil4[aframe], Resizer(bmpEvil4[aframe], vEvils[i]->x, vEvils[i]->y));
+                }
+                if (vEvils[i]->CheckType(evil5_flag))
+                {
+                    int aframe = vEvils[i]->GetFrame();
+                    Draw->DrawBitmap(bmpEvil5[aframe], Resizer(bmpEvil5[aframe], vEvils[i]->x, vEvils[i]->y));
+                }
+            }
+        }
 
         ///////////////////////////////////////////////////
         if (bckgBrush)Draw->FillRectangle(D2D1::RectF(0, 0, scr_width, 50.0f), bckgBrush);
@@ -1725,7 +1912,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             int arm_size = 0;
             
             if (!cloak_on && !mail_on)
-                Draw->DrawTextW(L"НЯМА БРОНЯ !", 15, nrmTextFormat,
+                Draw->DrawTextW(L"НЯМА БРОНЯ !", 13, nrmTextFormat,
                     D2D1::RectF(scr_width - scr_width / 3, ground + 5.0f, scr_width, scr_height), inactBrush);
             else
             {
@@ -1746,7 +1933,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             
         }
         ///////////////////////////////////////////////////
-
 
         if (Hero)
         {
@@ -1798,7 +1984,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                 }
                 break;
             }
+
+            if (Hero->lifes > 120)
+                Draw->DrawLine(D2D1::Point2F(Hero->x - 5.0f, Hero->ey), D2D1::Point2F(Hero->x + (float)(Hero->lifes / 5), 
+                    Hero->ey), LifeBrush, 5.0f);
+            else if (Hero->lifes > 60)
+                Draw->DrawLine(D2D1::Point2F(Hero->x - 5.0f, Hero->ey), D2D1::Point2F(Hero->x + (float)(Hero->lifes / 5), 
+                    Hero->ey), HurtBrush, 5.0f);
+            else
+                Draw->DrawLine(D2D1::Point2F(Hero->x - 5.0f, Hero->ey), D2D1::Point2F(Hero->x + (float)(Hero->lifes / 5), 
+                    Hero->ey), CritBrush, 5.0f);
         }
+        
 
         ////////////////////////////////////////////////
         Draw->EndDraw();
