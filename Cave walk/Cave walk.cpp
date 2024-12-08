@@ -1776,7 +1776,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             {
                 if (!(Hero->x >= (*evil)->ex || Hero->ex <= (*evil)->x || Hero->y >= (*evil)->ey || Hero->ey <= (*evil)->y))
                 {
-                    int damage= (*evil)->Attack();
+                    int damage = (*evil)->Attack();
                     if (damage > 0)
                     {
                         if (cloak_on)
@@ -1797,7 +1797,30 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                             Hero->lifes -= damage;
                         }
                     }
-                    (*evil)->lifes -= Hero->Attack(); 
+                    
+                    damage = Hero->Attack();
+                    if (damage > 0)
+                    {
+                        (*evil)->lifes -= damage;
+                        if (RandGenerator(0, 20) == 6)
+                        {
+                            if (Hero->CheckType(hero_club_flag))
+                            {
+                                club_lifes--;
+                                if (club_lifes <= 0)Hero->Transform(hero_flag);
+                            }
+                            else if (Hero->CheckType(hero_axe_flag))
+                            {
+                                axe_lifes--;
+                                if (axe_lifes <= 0)Hero->Transform(hero_flag);
+                            }
+                            else if (Hero->CheckType(hero_sword_flag))
+                            {
+                                sword_lifes--;
+                                if (sword_lifes <= 0)Hero->Transform(hero_flag);
+                            }
+                        }
+                    }
                     if (Hero->lifes <= 0)
                     {
                         RIP_x = Hero->x;
