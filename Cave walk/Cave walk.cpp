@@ -154,6 +154,9 @@ ID2D1Bitmap* bmpIntro[56]{ nullptr };
 
 dll::creature_ptr Hero = nullptr;
 bool move_hero = false;
+bool hero_killed = false;
+float RIP_x{};
+float RIP_y{};
 
 bool cloak_on = false;
 bool mail_on = false;
@@ -1711,11 +1714,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                     {
                         cloak_lifes = 100;
                         cloak_on = true;
+                        mail_on = false;
                     }
                     if ((*asset)->CheckFlag(mail_flag))
                     {
                         mail_lifes = 200;
                         mail_on = true;
+                        cloak_on = false;
                     }
                     (*asset)->Release();
                     vAssets.erase(asset);
@@ -1765,7 +1770,54 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             }
         }
 
-
+        if (Hero && !vEvils.empty())
+        {
+            for (std::vector<dll::creature_ptr>::iterator evil = vEvils.begin(); evil < vEvils.end(); evil++)
+            {
+                if (!(Hero->x >= (*evil)->ex || Hero->ex <= (*evil)->x || Hero->y >= (*evil)->ey || Hero->ey <= (*evil)->y))
+                {
+                    int damage= (*evil)->Attack();
+                    if (damage > 0)
+                    {
+                        if (cloak_on)
+                        {
+                            cloak_lifes--;
+                            if (cloak_lifes <= 0) cloak_on = false;
+                            if (sound)mciSendString(L"play .\\res\\snd\\blocked.wav", NULL, NULL, NULL);
+                        }
+                        else if (mail_on)
+                        {
+                            mail_lifes--;
+                            if (mail_lifes <= 0) mail_on = false;
+                            if (sound)mciSendString(L"play .\\res\\snd\\blocked.wav", NULL, NULL, NULL);
+                        }
+                        else
+                        {
+                            if (sound)mciSendString(L"play .\\res\\snd\\hero_hurt.wav", NULL, NULL, NULL);
+                            Hero->lifes -= damage;
+                        }
+                    }
+                    (*evil)->lifes -= Hero->Attack(); 
+                    if (Hero->lifes <= 0)
+                    {
+                        RIP_x = Hero->x;
+                        RIP_y = Hero->y;
+                        Hero->Release();
+                        Hero = nullptr;
+                        hero_killed = true;
+                        break;
+                    }
+                    if ((*evil)->lifes <= 0)
+                    {
+                        if (sound)mciSendString(L"play .\\res\\snd\\evilkilled.wav", NULL, NULL, NULL);
+                        score += 10 + level;
+                        (*evil)->Release();
+                        vEvils.erase(evil);
+                        break;
+                    }
+                }
+            }
+        }
 
         // DRAW THINGS ********************************
 
@@ -1880,7 +1932,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             else Draw->DrawTextW(L"ПОМОЩ ЗА ИГРАТА", 16, nrmTextFormat, b3Rect, txtBrush);
         }
 
-        if (nrmTextFormat && hgltBrush && inactBrush)
+        if (nrmTextFormat && hgltBrush && HurtBrush)
         {
             wchar_t stat_txt[150] = L"\0";
             wchar_t add[5] = L"\0";
@@ -1916,24 +1968,40 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                     D2D1::RectF(scr_width - scr_width / 3, ground + 5.0f, scr_width, scr_height), inactBrush);
             else
             {
-                if (cloak_on)wcscpy_s(armor_txt, L"наметало: ");
-                wsprintf(arm_add, L"%d", cloak_lifes);
-                wcscat_s(armor_txt, arm_add);
-                if(mail_on)wcscpy_s(armor_txt, L"броня: ");
-                wsprintf(arm_add, L"%d", mail_lifes);
-                wcscat_s(armor_txt, arm_add);
+                if (cloak_on)
+                {
+                    wcscpy_s(armor_txt, L"наметало: ");
+                    wsprintf(arm_add, L"%d", cloak_lifes);
+                    wcscat_s(armor_txt, arm_add);
+                }
+                else if (mail_on)
+                {
+                    wcscpy_s(armor_txt, L"броня: ");
+                    wsprintf(arm_add, L"%d", mail_lifes);
+                    wcscat_s(armor_txt, arm_add);
+                }
                 for (int i = 0; i < 30; i++)
                 {
-                    if (armor_txt[i] != '\0')arm_size++;
+                    if (armor_txt[i] != '\0')++arm_size;
                     else break;
                 }
                 Draw->DrawTextW(armor_txt, arm_size, nrmTextFormat,
-                    D2D1::RectF(scr_width - scr_width / 3, ground + 5.0f, scr_width, scr_height), hgltBrush);
+                    D2D1::RectF(scr_width - scr_width / 3, ground + 5.0f, scr_width, scr_height), HurtBrush);
             }
             
         }
         ///////////////////////////////////////////////////
 
+        if (hero_killed)
+        {
+            Draw->DrawBitmap(bmpRIP, D2D1::RectF(RIP_x, RIP_y, RIP_x + 80.0f, RIP_y + 94.0f));
+            Draw->EndDraw();
+            PlaySound(NULL, NULL, NULL);
+            if (sound)PlaySound(L".\\res\\snd\\killed.wav", NULL, SND_SYNC);
+            else Sleep(2000);
+            GameOver();
+        }
+        
         if (Hero)
         {
             switch (Hero->dir)
