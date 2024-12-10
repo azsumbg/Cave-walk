@@ -326,6 +326,51 @@ void GameOver()
     bMsg.message = WM_QUIT;
     bMsg.wParam = 0;
 }
+void HallOfFame()
+{
+    int result = 0;
+    CheckFile(record_file, &result);
+    if (result == FILE_NOT_EXIST)
+    {
+        if (sound)mciSendString(L"play .\\res\\snd\\exclamation.wav", NULL, NULL, NULL);
+        MessageBox(bHwnd, L"Все още няма рекорди на играта !\n\nПостарай се повече !", L"Липсва файл !",
+            MB_OK | MB_APPLMODAL | MB_ICONEXCLAMATION);
+        return;
+    }
+
+    std::wifstream rec(record_file);
+    wchar_t txt[100] = L"НАЙ-ДОБЪР ИГРАЧ: ";
+    wchar_t saved_player[16] = L"\0";
+    wchar_t add[5] = L"\0";
+
+    rec >> result;
+    wsprintf(add, L"%d", result);
+    for (int i = 0; i < 16; i++)
+    {
+        int letter = 0;
+        rec >> letter;
+        saved_player[i] = static_cast<wchar_t>(letter);
+    }
+    rec.close();
+    wcscat_s(txt, saved_player);
+    wcscat_s(txt, L"\n\nСВЕТОВЕН РЕКОРД: ");
+    wcscat_s(txt, add);
+    result = 0;
+    for (int i = 0; i < 100; i++)
+        if (txt[i] != '\0')result++;
+        else break;
+
+    if (Draw && txtBrush && midTextFormat)
+    {
+        Draw->BeginDraw();
+        Draw->Clear(D2D1::ColorF(D2D1::ColorF::DarkOrange));
+        Draw->DrawTextW(txt, result, midTextFormat, D2D1::RectF(50.0f, 100.0f, scr_width, scr_height), txtBrush);
+        Draw->EndDraw();
+    }
+
+    if (sound)mciSendString(L"play .\\res\\snd\\showrec.wav", NULL, NULL, NULL);
+    Sleep(3500);
+}
 void InitGame()
 {
     level = 1;
@@ -1366,6 +1411,88 @@ void LevelUp()
         }
     }
 }
+void SaveGame()
+{
+    int result = 0;
+    CheckFile(save_file, &result);
+    if (result == FILE_EXIST)
+    {
+        if (sound)mciSendString(L"play .\\res\\snd\\exclamation.wav", NULL, NULL, NULL);
+        if (MessageBox(bHwnd, L"Има записана игра, която ще загубиш !\n\nНаистина ли я презаписваш ?",
+            L"Презапис ?", MB_YESNO | MB_APPLMODAL | MB_ICONQUESTION) == IDNO)return;
+    }
+
+    std::wofstream save(save_file);
+
+    save << level << std::endl;
+    save << score << std::endl;
+    save << secs << std::endl;
+    save << sound << std::endl;
+    save << cloak_on << std::endl;
+    save << mail_on << std::endl;
+    save << cloak_lifes << std::endl;
+    save << mail_lifes << std::endl;
+    save << club_lifes << std::endl;
+    save << axe_lifes << std::endl;
+    save << sword_lifes << std::endl;
+    for (int i = 0; i < 16; i++)save << static_cast<int>(current_player[i]) << std::endl;
+    save << name_set << std::endl;
+    save << hero_killed << std::endl;
+
+    save << vObstacles.size() << std::endl;
+    if (!vObstacles.empty())
+    {
+        for (int i = 0; i < vObstacles.size(); ++i)
+        {
+            save << static_cast<int>(vObstacles[i]->GetType()) << std::endl;
+            save << vObstacles[i]->x << std::endl;
+            save << vObstacles[i]->y << std::endl;
+        }
+    }
+
+    save << vAssets.size() << std::endl;
+    if (!vAssets.empty())
+    {
+        for (int i = 0; i < vAssets.size(); ++i)
+        {
+            save << static_cast<int>(vAssets[i]->GetType()) << std::endl;
+            save << vAssets[i]->x << std::endl;
+            save << vAssets[i]->y << std::endl;
+        }
+    }
+
+    save << vCrystals.size() << std::endl;
+    if (!vCrystals.empty())
+    {
+        for (int i = 0; i < vCrystals.size(); ++i)
+        {
+            save << vCrystals[i]->x << std::endl;
+            save << vCrystals[i]->y << std::endl;
+        }
+    }
+
+    save << Hero->x << std::endl;
+    save << Hero->y << std::endl;
+    save << Hero->GetTypeFlag() << std::endl;
+    save << Hero->lifes << std::endl;
+
+    save << vEvils.size() << std::endl;
+    if (!vEvils.empty())
+    {
+        for (int i = 0; i < vEvils.size(); ++i)
+        {
+            save << vEvils[i]->x << std::endl;
+            save << vEvils[i]->y << std::endl;
+            save << vEvils[i]->GetTypeFlag() << std::endl;
+            save << vEvils[i]->lifes << std::endl;
+        }
+    }
+
+    save.close();
+
+    if (sound)mciSendString(L"play .\\res\\snd\\save.wav", NULL, NULL, NULL);
+    MessageBox(bHwnd, L"Играта е запазена !", L"Запис !", MB_OK | MB_APPLMODAL | MB_ICONINFORMATION);
+}
 
 INT_PTR CALLBACK bDlgProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1411,7 +1538,7 @@ LRESULT CALLBACK bWinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPa
         bMain = CreateMenu();
         bStore = CreateMenu();
         AppendMenu(bBar, MF_POPUP, (UINT_PTR)bMain, L"Основно меню");
-        AppendMenu(bBar, MF_POPUP, (UINT_PTR)bMain, L"Меню за данни");
+        AppendMenu(bBar, MF_POPUP, (UINT_PTR)bStore, L"Меню за данни");
         
         AppendMenu(bMain, MF_STRING, mNew, L"Нова игра");
         AppendMenu(bMain, MF_STRING, mLvl, L"Следващо ниво");
@@ -1544,11 +1671,35 @@ LRESULT CALLBACK bWinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPa
             InitGame();
             break;
 
+        case mLvl:
+            pause = true;
+            if (sound)mciSendString(L"play .\\res\\snd\\exclamation.wav", NULL, NULL, NULL);
+            if (MessageBox(hwnd, L"Ако прескочиш нивото, ще загубиш тази игра !\n\nНаистина ли прескачаш ниво ?",
+                L"Прескачане на ниво ?", MB_YESNO | MB_APPLMODAL | MB_ICONQUESTION) == IDNO)
+            {
+                pause = false;
+                break;
+            }
+            LevelUp();
+            break;
 
         case mExit:
             SendMessage(hwnd, WM_CLOSE, NULL, NULL);
             break;
 
+        case mSave:
+            pause = true;
+            SaveGame();
+            pause = false;
+            break;
+
+
+
+        case mHoF:
+            pause = true;
+            HallOfFame();
+            pause = false;
+            break;
         }
         break;
 
@@ -2418,6 +2569,36 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                     damage = Hero->Attack();
                     if (damage > 0)
                     {
+                        if (RandGenerator(0, 10) == 6)
+                        {
+                            if (Hero->CheckType(hero_club_flag))
+                            {
+                                --club_lifes;
+                                if (club_lifes <= 0)
+                                {
+                                    Hero->Transform(hero_flag);
+                                    if (sound)mciSendString(L"play .\\res\\snd\\broke.wav", NULL, NULL, NULL);
+                                }
+                            }
+                            else if (Hero->CheckType(hero_axe_flag))
+                            {
+                                --axe_lifes;
+                                if (axe_lifes <= 0)
+                                {
+                                    Hero->Transform(hero_flag);
+                                    if (sound)mciSendString(L"play .\\res\\snd\\broke.wav", NULL, NULL, NULL);
+                                }
+                            }
+                            else if (Hero->CheckType(hero_sword_flag))
+                            {
+                                --sword_lifes;
+                                if (sword_lifes <= 0)
+                                {
+                                    Hero->Transform(hero_flag);
+                                    if (sound)mciSendString(L"play .\\res\\snd\\broke.wav", NULL, NULL, NULL);
+                                }
+                            }
+                        }
                         (*evil)->lifes -= damage;
                         if (RandGenerator(0, 20) == 6)
                         {

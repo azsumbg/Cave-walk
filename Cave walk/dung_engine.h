@@ -132,6 +132,7 @@ namespace dll
 			virtual ~BASE_ASSETS_CLASS() {};
 
 			void Release();
+			int16_t GetType() const;
 
 			bool CheckFlag(int16_t which_flag) const;
 			void SetFlag(int16_t which_flag);
@@ -180,6 +181,7 @@ namespace dll
 
 			bool CheckType(unsigned char which_type);
 			void SetObstacleFlag(unsigned char which_flag);
+			unsigned char GetTypeFlag() const;
 			unsigned char GetObstacleFlag() const;
 			unsigned char Move(float gear, PROT_CONTAINER& Obstacles, bool need_new_path = false,
 				float target_x = 0, float target_y = 0);
