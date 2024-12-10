@@ -105,7 +105,6 @@ ID2D1SolidColorBrush* LifeBrush{ nullptr };
 ID2D1SolidColorBrush* HurtBrush{ nullptr };
 ID2D1SolidColorBrush* CritBrush{ nullptr };
 
-
 IDWriteFactory* iWriteFactory{ nullptr };
 IDWriteTextFormat* nrmTextFormat{ nullptr };
 IDWriteTextFormat* midTextFormat{ nullptr };
@@ -382,6 +381,11 @@ void InitGame()
     club_lifes = 100;
     axe_lifes = 100;
     sword_lifes = 100;
+
+    ViewMapRect.left = -200.0f;
+    ViewMapRect.top = -100.0f;
+    ViewMapRect.right = map_width;
+    ViewMapRect.bottom = map_height;
 
     cloak_lifes = 0;
     mail_lifes = 0;
@@ -1439,6 +1443,11 @@ void SaveGame()
     save << name_set << std::endl;
     save << hero_killed << std::endl;
 
+    save << ViewMapRect.left << std::endl;
+    save << ViewMapRect.right << std::endl;
+    save << ViewMapRect.top << std::endl;
+    save << ViewMapRect.bottom << std::endl;
+
     save << vObstacles.size() << std::endl;
     if (!vObstacles.empty())
     {
@@ -1563,6 +1572,16 @@ void LoadGame()
     save >> name_set;
     save >> hero_killed;
 
+    float temp_viewrect_dim = 0;
+    save >> temp_viewrect_dim;
+    ViewMapRect.left = temp_viewrect_dim;
+    save >> temp_viewrect_dim;
+    ViewMapRect.right = temp_viewrect_dim;
+    save >> temp_viewrect_dim;
+    ViewMapRect.top = temp_viewrect_dim;
+    save >> temp_viewrect_dim;
+    ViewMapRect.bottom = temp_viewrect_dim;
+    
     if (hero_killed)GameOver();
 
     save >> result;
