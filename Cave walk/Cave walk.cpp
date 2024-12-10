@@ -1493,6 +1493,163 @@ void SaveGame()
     if (sound)mciSendString(L"play .\\res\\snd\\save.wav", NULL, NULL, NULL);
     MessageBox(bHwnd, L"Играта е запазена !", L"Запис !", MB_OK | MB_APPLMODAL | MB_ICONINFORMATION);
 }
+void LoadGame()
+{
+    int result = 0;
+    CheckFile(save_file, &result);
+    if (result == FILE_NOT_EXIST)
+    {
+        if (sound)mciSendString(L"play .\\res\\snd\\exclamation.wav", NULL, NULL, NULL);
+        MessageBox(bHwnd, L"Все още няма записана игра !\n\nПостарай се повече !", L"Липсва файл !",
+            MB_OK | MB_APPLMODAL | MB_ICONEXCLAMATION);
+        return;
+    }
+    else
+    {
+        if (sound)mciSendString(L"play .\\res\\snd\\exclamation.wav", NULL, NULL, NULL);
+        if (MessageBox(bHwnd, L"Настоящата игра ще бъде загубена !\n\nНаистина ли я презаписваш ?",
+            L"Презапис ?", MB_YESNO | MB_APPLMODAL | MB_ICONQUESTION) == IDNO)return;
+    }
+
+    mins = 0;
+    secs = 0;
+
+    move_hero = false;
+
+    ViewMapRect.left = -200.0f;
+    ViewMapRect.top = -100.0f;
+    ViewMapRect.right = map_width;
+    ViewMapRect.bottom = map_height;
+
+    ClearHeap(&Hero);
+    Hero = dll::CreatureFactory(hero_flag, 80.0f, ground - 150.0f);
+
+    if (!vObstacles.empty())
+        for (int i = 0; i < vObstacles.size(); ++i)ClearHeap(&vObstacles[i]);
+    vObstacles.clear();
+
+    if (!vCrystals.empty())
+        for (int i = 0; i < vCrystals.size(); ++i)ClearHeap(&vCrystals[i]);
+    vCrystals.clear();
+
+    if (!vAssets.empty())
+        for (int i = 0; i < vAssets.size(); ++i)ClearHeap(&vAssets[i]);
+    vAssets.clear();
+
+    if (!vEvils.empty())
+        for (int i = 0; i < vEvils.size(); ++i)ClearHeap(&vEvils[i]);
+    vEvils.clear();
+    //////////////////////////////////////////////////////////////////////////
+
+    std::wifstream save(save_file);
+
+    save >> level;
+    save >> score;
+    save >> secs;
+    save >> sound;
+    save >> cloak_on;
+    save >> mail_on;
+    save >> cloak_lifes;
+    save >> mail_lifes;
+    save >> club_lifes;
+    save >> axe_lifes;
+    save >> sword_lifes;
+    for (int i = 0; i < 16; i++)
+    {
+        int letter = 0;
+        save >> letter;
+        current_player[i] = static_cast<wchar_t>(letter);
+    }
+    save >> name_set;
+    save >> hero_killed;
+
+    if (hero_killed)GameOver();
+
+    save >> result;
+    if (result > 0)
+    {
+        for (int i = 0; i < result; i++)
+        {
+            int16_t ttype = 0;
+            float tx = 0;
+            float ty = 0;
+
+            save >> ttype;
+            save >> tx;
+            save >> ty;
+            vObstacles.push_back(dll::AssetFactory(ttype, tx, ty));
+        }
+    }
+
+    save >> result;
+    if (result > 0)
+    {
+        for (int i = 0; i < result; i++)
+        {
+            int16_t ttype = 0;
+            float tx = 0;
+            float ty = 0;
+
+            save >> ttype;
+            save >> tx;
+            save >> ty;
+            vAssets.push_back(dll::AssetFactory(ttype, tx, ty));
+        }
+    }
+
+    save >> result;
+    if (result > 0)
+    {
+        for (int i = 0; i < result; i++)
+        {
+            float tx = 0;
+            float ty = 0;
+
+            save >> tx;
+            save >> ty;
+            vCrystals.push_back(dll::AssetFactory(crystal_flag, tx, ty));
+        }
+    }
+
+    float hero_tx = 0;
+    float hero_ty = 0;
+    int hero_ttype = 0;
+    int hero_tlifes = 0;
+
+    save >> hero_tx;
+    save >> hero_ty;
+    save >> hero_ttype;
+    save >> hero_tlifes;
+
+    Hero = dll::CreatureFactory(hero_flag, hero_tx, hero_ty);
+    Hero->Transform(static_cast<unsigned char>(hero_ttype));
+    Hero->lifes = hero_tlifes;
+
+    save >> result;
+    if (result > 0)
+    {
+        for (int i = 0; i < result; i++)
+        {
+            float tx = 0;
+            float ty = 0;
+            int ttype = 0;
+            int tlifes = 0;
+
+            save >> tx;
+            save >> ty;
+            save >> ttype;
+            save >> tlifes;
+
+            vEvils.push_back(dll::CreatureFactory(static_cast<unsigned char>(ttype), tx, ty));
+            vEvils.back()->lifes = tlifes;
+        }
+    }
+  
+    save.close();
+
+    if (sound)mciSendString(L"play .\\res\\snd\\save.wav", NULL, NULL, NULL);
+    MessageBox(bHwnd, L"Играта е заредена !", L"Зареждане !", MB_OK | MB_APPLMODAL | MB_ICONINFORMATION);
+}
 
 INT_PTR CALLBACK bDlgProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1693,7 +1850,11 @@ LRESULT CALLBACK bWinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPa
             pause = false;
             break;
 
-
+        case mLoad:
+            pause = true;
+            LoadGame();
+            pause = false;
+            break;
 
         case mHoF:
             pause = true;
