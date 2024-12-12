@@ -28,10 +28,10 @@ constexpr unsigned char evil3_flag{ 0b00000100 };
 constexpr unsigned char evil4_flag{ 0b00001000 };
 constexpr unsigned char evil5_flag{ 0b00010000 };
 
-constexpr unsigned char hero_flag{ 0b10000001 };
-constexpr unsigned char hero_club_flag{ 0b10000011 };
-constexpr unsigned char hero_axe_flag{ 0b10000101 };
-constexpr unsigned char hero_sword_flag{ 0b10001001 };
+constexpr unsigned char hero_flag{ 0b10000000 };
+constexpr unsigned char hero_club_flag{ 0b10000010 };
+constexpr unsigned char hero_axe_flag{ 0b10000100 };
+constexpr unsigned char hero_sword_flag{ 0b10001000 };
 
 // OBJECT FLAGS ************************************
 

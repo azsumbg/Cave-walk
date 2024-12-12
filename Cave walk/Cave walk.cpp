@@ -2527,6 +2527,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
     CreateResources();
 
+    PlaySound(sound_file, NULL, SND_ASYNC | SND_LOOP);
+
     while (bMsg.message != WM_QUIT)
     {
         if ((bRet = PeekMessage(&bMsg, bHwnd, NULL, NULL, PM_REMOVE)) != 0)
@@ -3074,50 +3076,56 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             switch (Hero->dir)
             {
             case dirs::left:
-                if (Hero->CheckType(hero_flag))
+            {
+                unsigned char current_type = Hero->GetTypeFlag();
+                if (current_type == hero_flag)
                 {
                     int aframe = Hero->GetFrame();
                     Draw->DrawBitmap(bmpHeroL[aframe], Resizer(bmpHeroL[aframe], Hero->x, Hero->y));
                 }
-                else if (Hero->CheckType(hero_club_flag))
+                else if (current_type == hero_club_flag)
                 {
                     int aframe = Hero->GetFrame();
                     Draw->DrawBitmap(bmpClubHeroL[aframe], Resizer(bmpClubHeroL[aframe], Hero->x, Hero->y));
                 }
-                else if (Hero->CheckType(hero_axe_flag))
+                else if (current_type == hero_axe_flag)
                 {
                     int aframe = Hero->GetFrame();
                     Draw->DrawBitmap(bmpAxeHeroL[aframe], Resizer(bmpAxeHeroL[aframe], Hero->x, Hero->y));
                 }
-                else if (Hero->CheckType(hero_sword_flag))
+                else if (current_type == hero_sword_flag)
                 {
                     int aframe = Hero->GetFrame();
                     Draw->DrawBitmap(bmpSwordHeroL[aframe], Resizer(bmpSwordHeroL[aframe], Hero->x, Hero->y));
                 }
-                break;
+            }  
+            break;
 
             case dirs::right:
-                if (Hero->CheckType(hero_flag))
+            {
+                unsigned char current_type = Hero->GetTypeFlag();
+                if (current_type == hero_flag)
                 {
                     int aframe = Hero->GetFrame();
                     Draw->DrawBitmap(bmpHeroR[aframe], Resizer(bmpHeroR[aframe], Hero->x, Hero->y));
                 }
-                else if (Hero->CheckType(hero_club_flag))
+                else if (current_type == hero_club_flag)
                 {
                     int aframe = Hero->GetFrame();
                     Draw->DrawBitmap(bmpClubHeroR[aframe], Resizer(bmpClubHeroR[aframe], Hero->x, Hero->y));
                 }
-                else if (Hero->CheckType(hero_axe_flag))
+                else if (current_type == hero_axe_flag)
                 {
                     int aframe = Hero->GetFrame();
                     Draw->DrawBitmap(bmpAxeHeroR[aframe], Resizer(bmpAxeHeroR[aframe], Hero->x, Hero->y));
                 }
-                else if (Hero->CheckType(hero_sword_flag))
+                else if (current_type == hero_sword_flag)
                 {
                     int aframe = Hero->GetFrame();
                     Draw->DrawBitmap(bmpSwordHeroR[aframe], Resizer(bmpSwordHeroR[aframe], Hero->x, Hero->y));
                 }
-                break;
+            }
+            break;
             }
 
             if (Hero->lifes > 120)
