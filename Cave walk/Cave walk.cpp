@@ -1669,6 +1669,51 @@ void LoadGame()
     if (sound)mciSendString(L"play .\\res\\snd\\save.wav", NULL, NULL, NULL);
     MessageBox(bHwnd, L"Играта е заредена !", L"Зареждане !", MB_OK | MB_APPLMODAL | MB_ICONINFORMATION);
 }
+void ShowHelp()
+{
+    int result = 0;
+    CheckFile(help_file, &result);
+    if (result == FILE_NOT_EXIST)
+    {
+        if (sound)mciSendString(L"play .\\res\\snd\\negative.wav", NULL, NULL, NULL);
+        MessageBox(bHwnd, L"Липсва помощна информация !\n\nСвържете се с разработчика !", L"Липсва файл !",
+            MB_OK | MB_APPLMODAL | MB_ICONERROR);
+        return;
+    }
+
+    wchar_t help_txt[1000] = L"\0";
+    std::wifstream help(help_file);
+    help >> result;
+    for (int i = 0; i < result; i++)
+    {
+        int letter = 0;
+        help >> letter;
+        help_txt[i] = static_cast<wchar_t>(letter);
+    }
+    help.close();
+
+    if (sound)mciSendString(L"play .\\res\\snd\\help.wav", NULL, NULL, NULL);
+
+    Draw->BeginDraw();
+    Draw->Clear(D2D1::ColorF(D2D1::ColorF::BurlyWood));
+    if (bckgBrush)Draw->FillRectangle(D2D1::RectF(0, 0, scr_width, 50.0f), bckgBrush);
+    if (txtBrush && hgltBrush && inactBrush && nrmTextFormat)
+    {
+        if (name_set) Draw->DrawTextW(L"ИМЕ НА БОЕЦ", 12, nrmTextFormat, b1Rect, inactBrush);
+        else
+        {
+            if (b1Hglt) Draw->DrawTextW(L"ИМЕ НА БОЕЦ", 12, nrmTextFormat, b1Rect, hgltBrush);
+            else Draw->DrawTextW(L"ИМЕ НА БОЕЦ", 12, nrmTextFormat, b1Rect, txtBrush);
+        }
+        if (b2Hglt) Draw->DrawTextW(L"ЗВУЦИ ON / OFF", 15, nrmTextFormat, b2Rect, hgltBrush);
+        else Draw->DrawTextW(L"ЗВУЦИ ON / OFF", 15, nrmTextFormat, b2Rect, txtBrush);
+        if (b3Hglt) Draw->DrawTextW(L"ПОМОЩ ЗА ИГРАТА", 16, nrmTextFormat, b3Rect, hgltBrush);
+        else Draw->DrawTextW(L"ПОМОЩ ЗА ИГРАТА", 16, nrmTextFormat, b3Rect, txtBrush);
+        Draw->DrawTextW(help_txt, result, nrmTextFormat, D2D1::RectF(50.0f, 100.0f, scr_width, scr_height), txtBrush);
+    }
+    Draw->EndDraw();
+
+}
 
 INT_PTR CALLBACK bDlgProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1923,6 +1968,22 @@ LRESULT CALLBACK bWinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPa
                 {
                     sound = true;
                     PlaySound(sound_file, NULL, SND_ASYNC | SND_LOOP);
+                    break;
+                }
+            }
+            if (LOWORD(lParam) >= b3Rect.left && LOWORD(lParam) <= b3Rect.right)
+            {
+                if (!show_help)
+                {
+                    pause = true;
+                    show_help = true;
+                    ShowHelp();
+                    break;
+                }
+                else
+                {
+                    pause = false;
+                    show_help = false;
                     break;
                 }
             }
@@ -2413,7 +2474,7 @@ void CreateResources()
             hr = iWriteFactory->CreateTextFormat(L"Segoe Print", NULL, DWRITE_FONT_WEIGHT_EXTRA_BLACK, DWRITE_FONT_STYLE_OBLIQUE,
                 DWRITE_FONT_STRETCH_NORMAL, 18, L"", &nrmTextFormat);
             hr = iWriteFactory->CreateTextFormat(L"Segoe Print", NULL, DWRITE_FONT_WEIGHT_EXTRA_BLACK, DWRITE_FONT_STYLE_OBLIQUE,
-                DWRITE_FONT_STRETCH_NORMAL, 32, L"", &midTextFormat);
+                DWRITE_FONT_STRETCH_NORMAL, 28, L"", &midTextFormat);
             hr = iWriteFactory->CreateTextFormat(L"Segoe Print", NULL, DWRITE_FONT_WEIGHT_EXTRA_BLACK, DWRITE_FONT_STYLE_OBLIQUE,
                 DWRITE_FONT_STRETCH_NORMAL, 72, L"", &bigTextFormat);
 
